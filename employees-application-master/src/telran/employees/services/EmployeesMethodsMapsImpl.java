@@ -91,12 +91,13 @@ public class EmployeesMethodsMapsImpl implements EmployeesMethods {
 		try {
 			writeLockGeneral.lock();
 			empl = mapEmployees.remove(id);
+			if (empl == null) {
+			return ReturnCode.EMPLOYEE_NOT_FOUND;
+			}
 		} finally {
 			writeLockGeneral.unlock();
 		}
-		if (empl == null) {
-			return ReturnCode.EMPLOYEE_NOT_FOUND;
-		}
+		
 		List<Employee>listEmployeesAge;
 		try {
 			readLockAge.lock();
@@ -141,15 +142,15 @@ public class EmployeesMethodsMapsImpl implements EmployeesMethods {
 
 	@Override
 	public Iterable<Employee> getAllEmployees() {
-		Collection<Employee> employees;
 		
 		try {
 			readLockGeneral.lock();
-			employees = mapEmployees.values();
+			return copyEmployees(mapEmployees.values());
+			
 		} finally {
 			readLockGeneral.unlock();
 		}
-		return copyEmployees(employees);
+		
 	}
 
 	private Iterable<Employee> copyEmployees(Collection<Employee> employees) {
@@ -165,28 +166,27 @@ public class EmployeesMethodsMapsImpl implements EmployeesMethods {
 
 	@Override
 	public Employee getEmployee(long id) {
-		Employee empl;
-		
 		try {
 			readLockGeneral.lock();
-			empl = mapEmployees.get(id);
+			Employee empl = mapEmployees.get(id);
+			return empl == null ? null : copyOneEmployee(empl);
 		} finally {
 			readLockGeneral.unlock();
 		}
-		return empl == null ? null : copyOneEmployee(empl);
+		
 	}
 
 	@Override
 	public Iterable<Employee> getEmployeesByAge(int ageFrom, int ageTo) {
-		Collection<List<Employee>> lists;
 		
+		List<Employee> employeesList;
 		try {
 			readLockAge.lock();
-			lists = employeesAge.subMap(ageFrom, true, ageTo, true).values();
+			Collection<List<Employee>> lists = employeesAge.subMap(ageFrom, true, ageTo, true).values();
+			employeesList = getCombinedList(lists);
 		} finally {
 			readLockAge.unlock();
 		}
-		List<Employee> employeesList = getCombinedList(lists);
 		return copyEmployees(employeesList);
 	}
 
@@ -197,30 +197,29 @@ public class EmployeesMethodsMapsImpl implements EmployeesMethods {
 
 	@Override
 	public Iterable<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
-		Collection<List<Employee>> lists;
-		
+		List<Employee> employeesList;
 		try {
 			readLockSalary.lock();
-			lists = employeesSalary.subMap(salaryFrom, true, salaryTo, true).values();
+			Collection<List<Employee>> lists = employeesSalary.subMap(salaryFrom, true, salaryTo, true).values();
+			employeesList = getCombinedList(lists);
 		} finally {
 			readLockSalary.unlock();
 		}
-		List<Employee> employeesList = getCombinedList(lists);
+		
 		return copyEmployees(employeesList);
 	}
 
 	@Override
 	public Iterable<Employee> getEmployeesByDepartment(String department) {
-		List<Employee> employees;
-		
 		try {
 			readLockDepartment.lock();
-			employees = employeesDepartment.getOrDefault(department, Collections.emptyList());
+			List<Employee> employees = employeesDepartment.getOrDefault(department, Collections.emptyList());
+			return employees.isEmpty() ? employees : copyEmployees(employees);
 		} finally {
 			readLockDepartment.unlock();
 		}
 		
-		return employees.isEmpty() ? employees : copyEmployees(employees);
+		
 	}
 
 	

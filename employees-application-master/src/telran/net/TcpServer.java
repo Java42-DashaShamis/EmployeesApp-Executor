@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+// V.R. It looks OK.
 public class TcpServer implements Runnable {
 	private int port;
 	private ApplProtocol protocol;
@@ -28,6 +29,7 @@ public class TcpServer implements Runnable {
 				break;
 			}
 		}
+		// V.R. Not bad place for shutdown. Really!
 		executor.shutdown();
 	}
 
